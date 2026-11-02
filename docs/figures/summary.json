@@ -1,0 +1,70 @@
+{
+  "nominal": {
+    "GM-PHD": {
+      "mean_ospa": 13.521167810036372,
+      "mean_ospa2": 27.078790046702075,
+      "card_mae": 0.4215,
+      "id_switches": 5.85,
+      "tracks": 23.0,
+      "ms_per_scan": 1.1211409435491078
+    },
+    "GM-CPHD": {
+      "mean_ospa": 11.343822784680338,
+      "mean_ospa2": 24.581468571774465,
+      "card_mae": 0.2285,
+      "id_switches": 3.8,
+      "tracks": 22.5,
+      "ms_per_scan": 8.084812621644232
+    },
+    "GLMB": {
+      "mean_ospa": 8.664058622587858,
+      "mean_ospa2": 13.706513138947578,
+      "card_mae": 0.0905,
+      "id_switches": 3.95,
+      "tracks": 12.85,
+      "ms_per_scan": 75.19826778190327
+    },
+    "GNN": {
+      "mean_ospa": 14.797137197135129,
+      "mean_ospa2": 22.858316869214846,
+      "card_mae": 0.4355,
+      "id_switches": 0.55,
+      "tracks": 10.7,
+      "ms_per_scan": 0.42017018850310706
+    }
+  },
+  "hard": {
+    "GM-PHD": {
+      "mean_ospa": 29.574146101389925,
+      "mean_ospa2": 47.676578064273016,
+      "card_mae": 1.3855,
+      "id_switches": 6.55,
+      "tracks": 33.75,
+      "ms_per_scan": 2.315589213045314
+    },
+    "GM-CPHD": {
+      "mean_ospa": 20.351719798750977,
+      "mean_ospa2": 46.574689172647716,
+      "card_mae": 0.5335,
+      "id_switches": 5.65,
+      "tracks": 39.9,
+      "ms_per_scan": 18.655197924992535
+    },
+    "GLMB": {
+      "mean_ospa": 12.308395682652973,
+      "mean_ospa2": 20.626004806719486,
+      "card_mae": 0.257,
+      "id_switches": 4.55,
+      "tracks": 14.2,
+      "ms_per_scan": 90.78574251403916
+    },
+    "GNN": {
+      "mean_ospa": 26.38653879654253,
+      "mean_ospa2": 43.555401720440884,
+      "card_mae": 0.934,
+      "id_switches": 5.95,
+      "tracks": 29.9,
+      "ms_per_scan": 0.8656954959733412
+    }
+  }
+}
