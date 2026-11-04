@@ -83,7 +83,7 @@ correspondence is kept while it stays within 50 m, the rest are matched optimall
 and a target's first match does not count.
 
 Run times are relative to GNN in the same condition. Absolute times, in ms per scan for GM-PHD /
-GM-CPHD / GLMB / GNN: nominal 1.1 / 8.1 / 75.2 / 0.4, hard 2.3 / 18.7 / 90.8 / 0.9. Measured on
+GM-CPHD / GLMB / GNN: nominal 1.1 / 8.1 / 75.2 / 0.420, hard 2.3 / 18.7 / 90.8 / 0.866. Measured on
 an Intel Xeon W-2155 (3.3 GHz; 20 logical CPUs, but the run is effectively single-threaded) with
 Python 3.12.3 on an otherwise idle machine. They will differ on other hardware; the ratios are
 the more portable figure.
@@ -158,12 +158,17 @@ tests/          unit tests (Kalman, ESF, Gibbs, metrics) and tracker integration
 2. B.-T. Vo, B.-N. Vo and A. Cantoni, "Analytic implementations of the cardinalized probability hypothesis density filter," *IEEE TSP* 55(7), 3553–3567, 2007. [doi:10.1109/TSP.2007.894241](https://doi.org/10.1109/TSP.2007.894241)
 3. B.-N. Vo, B.-T. Vo and H. G. Hoang, "An efficient implementation of the generalized labeled multi-Bernoulli filter," *IEEE TSP* 65(8), 1975–1987, 2017. [doi:10.1109/TSP.2016.2641392](https://doi.org/10.1109/TSP.2016.2641392)
 4. D. Schuhmacher, B.-T. Vo and B.-N. Vo, "A consistent metric for performance evaluation of multi-object filters," *IEEE TSP* 56(8), 3447–3457, 2008. [doi:10.1109/TSP.2008.920469](https://doi.org/10.1109/TSP.2008.920469)
-5. M. Beard, B.-T. Vo and B.-N. Vo, "A solution for large-scale multi-object tracking," *IEEE TSP* 68, 2754–2769, 2020 (OSPA(2)). [doi:10.1109/TSP.2020.2986136](https://doi.org/10.1109/TSP.2020.2986136)
-6. B. Ristic, D. Clark, B.-N. Vo and B.-T. Vo, "Adaptive target birth intensity for PHD and CPHD filters," *IEEE TAES* 48(2), 1656–1668, 2012. [doi:10.1109/TAES.2012.6178085](https://doi.org/10.1109/TAES.2012.6178085)
-7. K. Bernardin and R. Stiefelhagen, "Evaluating multiple object tracking performance: the CLEAR MOT metrics," *EURASIP JIVP* 2008, article 246309, 2008. [doi:10.1155/2008/246309](https://doi.org/10.1155/2008/246309)
+5. M. Beard, B.-T. Vo and B.-N. Vo, "OSPA(2): Using the OSPA metric to evaluate multi-target tracking performance," *Proc. International Conference on Control, Automation and Information Sciences (ICCAIS)*, 86–91, 2017. [doi:10.1109/ICCAIS.2017.8217598](https://doi.org/10.1109/ICCAIS.2017.8217598)
+6. M. Beard, B.-T. Vo and B.-N. Vo, "A solution for large-scale multi-object tracking," *IEEE TSP* 68, 2754–2769, 2020 (windowed OSPA(2) evaluation). [doi:10.1109/TSP.2020.2986136](https://doi.org/10.1109/TSP.2020.2986136)
+7. B. Ristic, D. Clark, B.-N. Vo and B.-T. Vo, "Adaptive target birth intensity for PHD and CPHD filters," *IEEE TAES* 48(2), 1656–1668, 2012. [doi:10.1109/TAES.2012.6178085](https://doi.org/10.1109/TAES.2012.6178085)
+8. S. Reuter, B.-T. Vo, B.-N. Vo and K. Dietmayer, "The labeled multi-Bernoulli filter," *IEEE TSP* 62(12), 3246–3260, 2014. [doi:10.1109/TSP.2014.2323064](https://doi.org/10.1109/TSP.2014.2323064)
+9. K. Bernardin and R. Stiefelhagen, "Evaluating multiple object tracking performance: the CLEAR MOT metrics," *EURASIP JIVP* 2008, article 246309, 2008. [doi:10.1155/2008/246309](https://doi.org/10.1155/2008/246309)
+10. S. Blackman and R. Popoli, *Design and Analysis of Modern Tracking Systems*, Artech House, 1999.
+
+The full annotated source list is in [docs/DESIGN.md](docs/DESIGN.md).
 
 ## Author
 
-Eric Tyler, PhD (random finite set multi-target tracking), Curtin University alumni.
+Eric Tyler, PhD in random finite set multi-target tracking (Curtin University).
 
 MIT licence.
