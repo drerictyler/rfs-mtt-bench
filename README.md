@@ -15,7 +15,8 @@ The package implements three RFS filters and a classical baseline behind one int
 Every tracker exposes `step(Z, k) -> Estimate(states, labels)`, so they run on the same
 scenarios and are scored with the same metrics.
 
-**In brief:** GLMB is the most accurate tracker in both conditions tested, at by far the highest
+**In brief:** GLMB is the most accurate tracker in both conditions tested (with a birth model
+centred on the true entry points; see Results), at by far the highest
 computational cost (about 100–180 times GNN's run time). Its weak point is identity: in the nominal case it has
 more ID switches than GNN (4.0 against 0.6 per run), and most of them come from two targets
 born at the same point, T04 and T05 (94 % of GLMB's switches in the nominal case, 68 % in
@@ -28,6 +29,14 @@ Background, design decisions, parameters and sources are in [docs/DESIGN.md](doc
 Ten targets in a 2 km × 2 km region over 100 scans, with staggered births and deaths, a
 three-way crossing at scan 40 and two targets born at the same point at scan 20.
 20 Monte Carlo runs per condition (`rfsmtt-bench --runs 20`).
+
+**Birth model.** As in the Vo & Ma (2006) benchmark, the RFS filters use a fixed birth model
+centred on the four true entry locations: one Gaussian per location, with standard deviations
+of 10 m in position and 20 m/s in velocity around zero velocity. GNN initiates tracks from
+unassigned detections. The reported differences therefore reflect both the tracking method
+and the birth information available to it; the gap with matched birth information has not
+been measured. Measurement-driven birth (`AdaptiveBirth`), which needs no prior knowledge of
+entry points, is implemented and tested but not yet benchmarked.
 
 <p align="center">
   <img src="docs/figures/scenario.png" width="45%">
@@ -49,7 +58,7 @@ three-way crossing at scan 40 and two targets born at the same point at scan 20.
 |---|---:|---:|---:|---:|---:|---:|
 | GM-PHD | 29.6 | 47.7 | 1.39 | 6.5 | 33.8 | 3 |
 | GM-CPHD | 20.4 | 46.6 | 0.53 | 5.7 | 39.9 | 22 |
-| GLMB | **12.3** | **20.6** | **0.26** | **4.5** | 14.2 | 105 |
+| GLMB | **12.3** | **20.6** | **0.26** | 4.5 | 14.2 | 105 |
 | GNN | 26.4 | 43.6 | 0.93 | 6.0 | 29.9 | 1 |
 
 <p align="center">
@@ -64,7 +73,8 @@ What the numbers show:
   that of every other tracker. It is also 100 to 180 times slower than GNN in this pure-Python
   implementation.
 - **CPHD fixes PHD's cardinality** (MAE 1.39 → 0.53 in the hard case) but not its track
-  continuity: OSPA(2) barely moves, because neither filter models identity.
+  continuity: OSPA(2) improves only slightly (by 2.5 m in the nominal case; in the hard case
+  the difference is not established), because neither filter models identity.
 - **GNN is a strong baseline when detection is good.** Its M-of-N confirmation delays and
   filters track starts, which keeps identity switches low in the nominal case, but it degrades
   sharply under dense clutter and missed detections.
@@ -88,6 +98,39 @@ an Intel Xeon W-2155 (3.3 GHz; 20 logical CPUs, but the run is effectively singl
 Python 3.12.3 on an otherwise idle machine. They will differ on other hardware; the ratios are
 the more portable figure.
 
+## Limitations
+
+- **Simple truth and sensor:** straight-line targets with no process noise, and Cartesian
+  position measurements. There is no range–azimuth or Doppler model, no manoeuvre model, and
+  constant p_D with uniform clutter (no sensor footprint).
+- **Birth information:** the RFS filters' birth model is centred on the true entry locations;
+  GNN has no such model (see above).
+- **Random seeds:** every tracker sees the same measurements, as intended. GLMB's Gibbs sampler,
+  however, is seeded with the same integer as the measurements (`np.random.default_rng(seed + r)`
+  for both), so its random numbers repeat the measurement stream rather than being
+  independent of it. The effect has not been measured; separating the streams is a planned
+  check.
+- **GNN baseline:** it has no explicit missed-detection or false-alarm cost in the
+  assignment; out-of-gate pairs are simply excluded. A JPDA or MHT baseline would be a
+  stronger reference.
+- **Statistics:** the tables report means over 20 runs. The table below gives paired 95%
+  confidence intervals for the mean difference over the same runs (`tools/paired_ci.py`).
+
+| Paired difference (per run) | Mean | 95% interval |
+|---|---:|---:|
+| OSPA(2), GNN − GLMB, nominal | 9.15 m | 8.11 to 10.20 m |
+| OSPA(2), GNN − GLMB, hard | 22.93 m | 20.56 to 25.30 m |
+| ID switches, GLMB − GNN, nominal | 3.40 | 1.45 to 5.35 |
+| ID switches, GLMB − GNN, hard | −1.40 | −4.10 to 1.30 |
+| OSPA(2), PHD − CPHD, nominal | 2.50 m | 1.30 to 3.70 m |
+| OSPA(2), PHD − CPHD, hard | 1.10 m | −0.03 to 2.24 m |
+
+GLMB's lower OSPA(2) in both conditions, GNN's fewer ID switches in the nominal case and CPHD's
+nominal OSPA(2) gain are clear. For the two hard-case rows whose interval includes zero, the
+data establish neither a winner nor equivalence.
+
+More in [docs/DESIGN.md](docs/DESIGN.md), section 7.
+
 ## Quick start
 
 ```bash
@@ -97,9 +140,10 @@ rfsmtt-bench --runs 20 --out results       # full benchmark, ~7 min (machine abo
 rfsmtt-bench --runs 3 --conditions nominal # quick look
 ```
 
-Tested with Python 3.12.3; exact versions in `requirements-lock.txt`. `tools/` holds two
-analysis scripts: `seed_sweep.py` (are the integration tests robust to the seed?) and
-`switch_attr.py` (which targets the ID switches come from).
+Tested with Python 3.12.3; exact versions in `requirements-lock.txt`. `tools/` holds three
+analysis scripts: `seed_sweep.py` (are the integration tests robust to the seed?),
+`switch_attr.py` (which targets the ID switches come from) and `paired_ci.py` (confidence
+intervals for the headline comparisons).
 
 ## Using the library
 
