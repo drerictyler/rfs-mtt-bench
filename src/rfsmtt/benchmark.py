@@ -34,13 +34,22 @@ FILTERS = ["GM-PHD", "GM-CPHD", "GLMB", "GNN"]
 COLORS = {"GM-PHD": "#4C72B0", "GM-CPHD": "#55A868", "GLMB": "#C44E52", "GNN": "#8172B2"}
 
 
+def sampler_seed(seed: int) -> np.random.SeedSequence:
+    """Seed for GLMB's Gibbs sampler in run ``seed``.
+
+    A child of the run's measurement seed (NumPy's recommended way to derive streams), so the
+    sampler's random numbers are independent of the measurement stream and still reproducible.
+    """
+    return np.random.SeedSequence(seed).spawn(1)[0]
+
+
 def make_tracker(name: str, sc: Scenario, seed: int):
     if name == "GM-PHD":
         return GMPHD(sc.model, sc.clutter, sc.birth)
     if name == "GM-CPHD":
         return GMCPHD(sc.model, sc.clutter, sc.birth)
     if name == "GLMB":
-        return GLMB(sc.model, sc.clutter, sc.birth, h_upd=1000, h_max=1000, rng=seed)
+        return GLMB(sc.model, sc.clutter, sc.birth, h_upd=1000, h_max=1000, rng=sampler_seed(seed))
     if name == "GNN":
         return GNNTracker(sc.model, confirm_m=4, confirm_n=5, init_unmeasured_std=25.0)
     raise ValueError(f"unknown tracker {name!r}")

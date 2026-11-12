@@ -145,6 +145,12 @@ scan; vectorising $\Upsilon$ over $(n, j)$ brought it to about 8 ms with identic
   returns a valid hypothesis.
 - **Duplicates:** the same child hypothesis can arise from different parents; their weights are
   summed (`logaddexp`) under a canonical key (sorted track-table indices).
+- **Random numbers and order:** the sampler has its own random stream, a child of the run's
+  measurement seed (`benchmark.sampler_seed`), so it is independent of the measurement noise
+  and still reproducible. Hypotheses are ranked with a stable sort. Equal weights are common
+  (two birth components with nothing in their gates give identical hypotheses), and NumPy's
+  default sort orders ties differently on different CPUs, which would change which hypothesis
+  draws which random numbers in the next scan.
 - **Track table:** updated tracks are indexed as `(measurement index) * (number of predicted
   tracks) + (predicted track index)`, which encodes parent and association in one integer.
   After pruning, the table is rebuilt from referenced indices only, so it stays proportional to

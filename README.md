@@ -18,8 +18,8 @@ scenarios and are scored with the same metrics.
 **In brief:** GLMB is the most accurate tracker in both conditions tested (with a birth model
 centred on the true entry points; see Results), at by far the highest
 computational cost (about 100–180 times GNN's run time). Its weak point is identity: in the nominal case it has
-more ID switches than GNN (4.0 against 0.6 per run), and most of them come from two targets
-born at the same point, T04 and T05 (94 % of GLMB's switches in the nominal case, 68 % in
+more ID switches than GNN (3.2 against 0.6 per run), and most of them come from two targets
+born at the same point, T04 and T05 (97 % of GLMB's switches in the nominal case, 77 % in
 the hard case).
 
 Background, design decisions, parameters and sources are in [docs/DESIGN.md](docs/DESIGN.md).
@@ -49,7 +49,7 @@ entry points, is implemented and tested but not yet benchmarked.
 |---|---:|---:|---:|---:|---:|---:|
 | GM-PHD | 13.5 | 27.1 | 0.42 | 5.8 | 23.0 | 3 |
 | GM-CPHD | 11.3 | 24.6 | 0.23 | 3.8 | 22.5 | 19 |
-| GLMB | **8.7** | **13.7** | **0.09** | 4.0 | 12.8 | 179 |
+| GLMB | **8.7** | **13.7** | **0.09** | 3.2 | 12.9 | 179 |
 | GNN | 14.8 | 22.9 | 0.44 | **0.6** | 10.7 | 1 |
 
 **Hard:** P_D = 0.80, 30 false alarms per scan
@@ -58,7 +58,7 @@ entry points, is implemented and tested but not yet benchmarked.
 |---|---:|---:|---:|---:|---:|---:|
 | GM-PHD | 29.6 | 47.7 | 1.39 | 6.5 | 33.8 | 3 |
 | GM-CPHD | 20.4 | 46.6 | 0.53 | 5.7 | 39.9 | 22 |
-| GLMB | **12.3** | **20.6** | **0.26** | 4.5 | 14.2 | 105 |
+| GLMB | **12.3** | **20.7** | **0.26** | 5.2 | 14.1 | 105 |
 | GNN | 26.4 | 43.6 | 0.93 | 6.0 | 29.9 | 1 |
 
 <p align="center">
@@ -78,7 +78,7 @@ What the numbers show:
 - **GNN is a strong baseline when detection is good.** Its M-of-N confirmation delays and
   filters track starts, which keeps identity switches low in the nominal case, but it degrades
   sharply under dense clutter and missed detections.
-- **Most GLMB ID switches come from targets T04 and T05** (94 % nominal, 68 % hard; counted
+- **Most GLMB ID switches come from targets T04 and T05** (97 % nominal, 77 % hard; counted
   with `tools/switch_attr.py`), which are born at the same point in the same scan. A likely
   cause is that the fixed birth model has one birth component per location, so the second
   target is born a scan later and the two labels can trade places while the targets still
@@ -95,8 +95,9 @@ and a target's first match does not count.
 Run times are relative to GNN in the same condition. Absolute times, in ms per scan for GM-PHD /
 GM-CPHD / GLMB / GNN: nominal 1.1 / 8.1 / 75.2 / 0.420, hard 2.3 / 18.7 / 90.8 / 0.866. Measured on
 an Intel Xeon W-2155 (3.3 GHz; 20 logical CPUs, but the run is effectively single-threaded) with
-Python 3.12.3 on an otherwise idle machine. They will differ on other hardware; the ratios are
-the more portable figure.
+Python 3.12.3 on an otherwise idle machine, before GLMB's sampler got its own random stream
+(see Limitations), which does not change its cost. They will differ on other hardware; the
+ratios are the more portable figure.
 
 ## Limitations
 
@@ -105,11 +106,18 @@ the more portable figure.
   constant p_D with uniform clutter (no sensor footprint).
 - **Birth information:** the RFS filters' birth model is centred on the true entry locations;
   GNN has no such model (see above).
-- **Random seeds:** every tracker sees the same measurements, as intended. GLMB's Gibbs sampler,
-  however, is seeded with the same integer as the measurements (`np.random.default_rng(seed + r)`
-  for both), so its random numbers repeat the measurement stream rather than being
-  independent of it. The effect has not been measured; separating the streams is a planned
-  check.
+- **GLMB's random numbers:** every tracker sees the same measurements, as intended. GLMB's Gibbs
+  sampler draws from its own stream, a child of each run's measurement seed
+  (`benchmark.sampler_seed`), and ranks hypotheses with a stable sort, so equal weights keep
+  their generation order and the results are the same on every CPU. Earlier versions reused
+  the measurement stream itself and ranked with NumPy's default sort, whose order of ties
+  depends on the CPU. Together the two changes moved GLMB's OSPA(2) little (it stayed at
+  13.7 m nominal and went from 20.6 to 20.7 m hard) and its ID switches more, from 4.0 to 3.2
+  per run nominal and from 4.5 to 5.2 hard: the ID-switch count depends on the sampler's random
+  numbers more than the other metrics do. Over five independent streams on the same
+  measurements (`tools/stream_sweep.py`), GLMB's mean ID switches range from 3.25 to 4.20 per
+  run nominal and from 4.05 to 6.65 hard, while OSPA(2) stays within 13.61–14.05 m and
+  20.75–21.84 m. The tables report stream 0.
 - **GNN baseline:** it has no explicit missed-detection or false-alarm cost in the
   assignment; out-of-gate pairs are simply excluded. A JPDA or MHT baseline would be a
   stronger reference.
@@ -118,10 +126,10 @@ the more portable figure.
 
 | Paired difference (per run) | Mean | 95% interval |
 |---|---:|---:|
-| OSPA(2), GNN − GLMB, nominal | 9.15 m | 8.11 to 10.20 m |
-| OSPA(2), GNN − GLMB, hard | 22.93 m | 20.56 to 25.30 m |
-| ID switches, GLMB − GNN, nominal | 3.40 | 1.45 to 5.35 |
-| ID switches, GLMB − GNN, hard | −1.40 | −4.10 to 1.30 |
+| OSPA(2), GNN − GLMB, nominal | 9.16 m | 8.15 to 10.18 m |
+| OSPA(2), GNN − GLMB, hard | 22.81 m | 20.49 to 25.13 m |
+| ID switches, GLMB − GNN, nominal | 2.70 | 1.50 to 3.90 |
+| ID switches, GLMB − GNN, hard | −0.80 | −3.65 to 2.05 |
 | OSPA(2), PHD − CPHD, nominal | 2.50 m | 1.30 to 3.70 m |
 | OSPA(2), PHD − CPHD, hard | 1.10 m | −0.03 to 2.24 m |
 
@@ -140,10 +148,11 @@ rfsmtt-bench --runs 20 --out results       # full benchmark, ~7 min (machine abo
 rfsmtt-bench --runs 3 --conditions nominal # quick look
 ```
 
-Tested with Python 3.12.3; exact versions in `requirements-lock.txt`. `tools/` holds three
+Tested with Python 3.12.3; exact versions in `requirements-lock.txt`. `tools/` holds four
 analysis scripts: `seed_sweep.py` (are the integration tests robust to the seed?),
-`switch_attr.py` (which targets the ID switches come from) and `paired_ci.py` (confidence
-intervals for the headline comparisons).
+`switch_attr.py` (which targets the ID switches come from), `paired_ci.py` (confidence
+intervals for the headline comparisons) and `stream_sweep.py` (how much GLMB depends on its
+sampler's random numbers).
 
 ## Using the library
 

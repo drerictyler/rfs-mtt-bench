@@ -150,7 +150,10 @@ class GLMB:
         keys = list(new)
         log_w = np.array([new[key] for key in keys])
         w = np.exp(log_w - logsumexp(log_w))
-        order = np.argsort(-w)
+        # Stable, so tied hypotheses (common: births with nothing in their gate) keep the order
+        # they were generated in. NumPy's default sort orders ties differently on different
+        # CPUs, which would change which hypothesis draws which random numbers next scan.
+        order = np.argsort(-w, kind="stable")
         order = order[w[order] > self.h_prune][: self.h_max]
         keys = [keys[i] for i in order]
         w = w[order] / w[order].sum()
