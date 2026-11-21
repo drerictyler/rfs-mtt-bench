@@ -109,7 +109,7 @@ ratios are the more portable figure.
 - **GLMB's random numbers:** every tracker sees the same measurements, as intended. GLMB's Gibbs
   sampler draws from its own stream, a child of each run's measurement seed
   (`benchmark.sampler_seed`), and ranks hypotheses with a stable sort, so equal weights keep
-  their generation order and the results are the same on every CPU. Earlier versions reused
+  their generation order. Earlier versions reused
   the measurement stream itself and ranked with NumPy's default sort, whose order of ties
   depends on the CPU. Together the two changes moved GLMB's OSPA(2) little (it stayed at
   13.7 m nominal and went from 20.6 to 20.7 m hard) and its ID switches more, from 4.0 to 3.2
@@ -118,6 +118,17 @@ ratios are the more portable figure.
   measurements (`tools/stream_sweep.py`), GLMB's mean ID switches range from 3.25 to 4.20 per
   run nominal and from 4.05 to 6.65 hard, while OSPA(2) stays within 13.61–14.05 m and
   20.75–21.84 m. The tables report stream 0.
+- **Results on other CPUs:** on x86-64 CPUs with AVX-512 (Intel Xeon, AMD EPYC), reruns
+  reproduce the benchmark's accuracy and track-count results exactly, and its figures pixel for
+  pixel (not always byte for byte: the PNG compression can differ between machines). Without
+  AVX-512 (tested on an Intel Core i5-12450H), NumPy runs different code for some operations,
+  and its last-bit differences change GLMB's random draws in 10 of the 20 hard-condition runs.
+  GLMB's hard-condition means are then 12.4 m OSPA, 20.8 m OSPA(2), 0.26 cardinality error, 5.4
+  ID switches and 13.95 tracks, against 12.3, 20.7, 0.26, 5.2 and 14.1 in the table above,
+  within the five-stream ranges. The paired hard-condition comparisons with GLMB shift with
+  them: GNN − GLMB OSPA(2) is 22.77 m instead of 22.81 m, and GLMB − GNN ID switches −0.55
+  instead of −0.80. The nominal condition and the other trackers are unchanged. ARM CPUs have
+  not been tested.
 - **GNN baseline:** it has no explicit missed-detection or false-alarm cost in the
   assignment; out-of-gate pairs are simply excluded. A JPDA or MHT baseline would be a
   stronger reference.
